@@ -1,0 +1,175 @@
+{
+  "name": "AI podcast generator",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bf9da19c-a760-4f68-82da-ea37ef6770cc",
+      "name": "When chat message received",
+      "webhookId": "02ffcfcf-8feb-4f11-b9f8-f7a902ee601b"
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a professional podcast script writer.\n\nWrite a conversational and engaging podcast script on the topic: {{ $json.chatInput }}.\n\nKeep it around 2 minutes when spoken.\n\nUse a friendly and informative tone, as if talking directly to listeners.\n\nAvoid any headings, labels, or formatting. Output plain text only."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9419cc79-7a64-4c84-b2f6-b032344bb298",
+      "name": "Podcast script Generator"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        224
+      ],
+      "id": "3ece8f05-3af9-4fbc-a77d-4bcb76c8c0c9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "rH1b7ZXJ4KZfUkKD",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.murf.ai/v1/speech/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "api-key: YOUR_MURF_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "voiceId",
+              "value": "Natalie"
+            },
+            {
+              "name": "locale",
+              "value": "en-US"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        576,
+        0
+      ],
+      "id": "216d0872-e56b-43bb-8a91-545f0ec4fa5c",
+      "name": "murf api"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.audioFile }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "81f83872-ad28-47ba-ab95-856a5497ec7b",
+      "name": "Podcast Downloader"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Podcast script Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Podcast script Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast script Generator": {
+      "main": [
+        [
+          {
+            "node": "murf api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "murf api": {
+      "main": [
+        [
+          {
+            "node": "Podcast Downloader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fda95822-0f8f-45e8-b974-8d6c6f63a2a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d112f1f287db1e5243206adad94f65d57a82aa86b97298e20a3088bc9d17cf4"
+  },
+  "nodeGroups": [],
+  "id": "7boeS0lngnqUmBxY",
+  "tags": []
+}
